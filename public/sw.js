@@ -1,11 +1,11 @@
 // Offline support.
 //  - App shell: stale-while-revalidate (instant start, updates apply on the next launch).
 //  - Dictionary files (data/*.txt?v=<version>): cache-first; a new version replaces the old one.
-const SHELL = 'manabi-shell-v1';
+const SHELL = 'manabi-shell-v2';
 const DATA = 'manabi-data-v1';
 const SHELL_FILES = [
   './', 'styles.css', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png',
-  'js/app.js', 'js/worker.js', 'js/search.js', 'js/kana.js', 'js/deinflect.js', 'js/tags.js',
+  'js/app.js', 'js/worker.js', 'js/search.js', 'js/kana.js', 'js/deinflect.js', 'js/tags.js', 'js/store.js', 'js/handwriting.js',
 ];
 
 self.addEventListener('install', (event) => {

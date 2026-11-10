@@ -39,6 +39,7 @@ function cleanGloss(g) {
   return g.replace(/^to /, '').trim();
 }
 
+const KANJI = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff々]/;
 const KANA_ONLY = /^[\u3040-\u309fー]+$/;
 
 export class Dictionary {
@@ -49,12 +50,67 @@ export class Dictionary {
     for (let i = 0; i < this.lines.length; i++) this.scores[i] = parseInt(this.lines[i], 10);
     [this.keys, this.keyIds] = splitPairs(index);
     [this.words, this.wordIds] = splitPairs(english);
+    this.kanji = new Map(); // kanji -> raw json, see setKanji
+    this.examples = new Map(); // entry id -> raw json, see setExamples
+  }
+
+  /** Optional extras, loaded after the core dictionary. Both are "<key>\t<json>" lines. */
+  setKanji(text) { const [keys, vals] = splitPairs(text); keys.forEach((k, i) => this.kanji.set(k, vals[i])); }
+  setExamples(text) { const [keys, vals] = splitPairs(text); keys.forEach((k, i) => this.examples.set(Number(k), vals[i])); }
+
+  kanjiInfo(ch) {
+    const raw = this.kanji.get(ch);
+    if (!raw) return null;
+    const [strokes, grade, jlpt, freq, on, kun, meanings] = JSON.parse(raw);
+    return { ch, strokes, grade, jlpt, freq, on, kun, meanings };
+  }
+
+  /** Everything shown when an entry is opened: example sentences and its kanji, in order of appearance. */
+  detail(id) {
+    const e = this.entry(id);
+    const chars = [...new Set([...(e.k[0] || '')])];
+    return {
+      id,
+      examples: this.examples.has(id) ? JSON.parse(this.examples.get(id)) : [],
+      kanji: chars.map((c) => this.kanjiInfo(c)).filter(Boolean),
+    };
+  }
+
+  /** Rank ids (Map id -> matched key length) by frequency, then shortest match. */
+  ranked(best, limit) {
+    const { scores } = this;
+    return [...best.entries()]
+      .sort((a, b) => scores[b[0]] - scores[a[0]] || a[1] - b[1] || a[0] - b[0])
+      .slice(0, limit)
+      .map(([id]) => this.entry(id));
+  }
+
+  /** Headwords/readings matching `test`, most common first. */
+  scan(test, limit) {
+    const best = new Map();
+    for (let i = 0; i < this.keys.length; i++) {
+      const key = this.keys[i];
+      if (!test(key)) continue;
+      for (const s of this.keyIds[i].split(' ')) {
+        const id = Number(s);
+        const prev = best.get(id);
+        if (prev === undefined || key.length < prev) best.set(id, key.length);
+      }
+    }
+    return this.ranked(best, limit);
+  }
+
+  /** Wildcard search: ? = exactly one character, * = any number of characters. */
+  pattern(query, limit) {
+    const source = query.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\?/g, '.').replace(/\*+/g, '.*');
+    const re = new RegExp(`^${source}$`, 'u');
+    return this.scan((key) => re.test(key), limit);
   }
 
   entry(id) {
     const line = this.lines[id];
-    const [k, r, s] = JSON.parse(line.slice(line.indexOf('\t') + 1));
-    return { id, k, r, s, score: this.scores[id] };
+    const [k, r, s, seq] = JSON.parse(line.slice(line.indexOf('\t') + 1));
+    return { id, seq, k, r, s, score: this.scores[id] };
   }
 
   /** Entry ids whose headword or reading is exactly `key` (already normalized). */
@@ -99,11 +155,7 @@ export class Dictionary {
         if (prev === undefined || len < prev) best.set(id, len);
       }
     }
-    const { scores } = this;
-    return [...best.entries()]
-      .sort((a, b) => scores[b[0]] - scores[a[0]] || a[1] - b[1] || a[0] - b[0])
-      .slice(0, limit)
-      .map(([id]) => this.entry(id));
+    return this.ranked(best, limit);
   }
 
   postings(i) {
@@ -168,7 +220,8 @@ export class Dictionary {
 
   /**
    * Main entry point. Returns { query, groups: [{ type, label?, entries }] }.
-   * Group types: exact, homophone, english, prefix, segment.
+   * Group types: exact, homophone, english, prefix, segment, contains, pattern.
+   * A single-kanji query also gets `kanji` (see kanjiInfo).
    */
   search(query, { limit = 40, homophones = false } = {}) {
     const q = normalize(query);
@@ -181,6 +234,13 @@ export class Dictionary {
       return fresh.length;
     };
     if (!q) return { query, groups };
+    const result = { query, groups };
+
+    if (/[?*]/.test(q) && hasJapanese(q)) {
+      push('pattern', this.pattern(q.replace(/\s/g, ''), limit));
+      return result;
+    }
+    if ([...q].length === 1 && this.kanji.has(q)) result.kanji = this.kanjiInfo(q);
 
     const latinOnly = hasLatin(q) && !hasJapanese(q);
     let jp = q, typing = false;
@@ -211,6 +271,10 @@ export class Dictionary {
     }
     // "dog" is not half-typed romaji for ど…; only guess that when there is no English match.
     if (jp && !(typing && english)) push('prefix', this.prefix(jp, limit));
-    return { query, groups };
+    // Kanji can sit anywhere in a compound (the second half of a word you could not read).
+    if (jp && KANJI.test(jp) && jp.length <= 4 && seen.size < limit) {
+      push('contains', this.scan((key) => key.includes(jp) && !key.startsWith(jp), limit - seen.size));
+    }
+    return result;
   }
 }

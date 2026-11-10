@@ -1,7 +1,7 @@
 {
   "name": "Manabi — Japanese lookup",
   "short_name": "Manabi",
-  "description": "Look up Japanese words instantly by typing or speaking. Works offline.",
+  "description": "Look up Japanese words instantly by typing, drawing or speaking. Works offline.",
   "lang": "en",
   "start_url": "./",
   "scope": "./",

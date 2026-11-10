@@ -103,3 +103,18 @@ test('spoken queries also list homophones', () => {
   assert.deepEqual(words('講演', { homophones: true }), [['exact', ['講演']], ['homophone', ['公園']]]);
   assert.deepEqual(words('講演'), [['exact', ['講演']]]);
 });
+
+test('wildcards and words containing a kanji', () => {
+  assert.deepEqual(words('食?る'), [['pattern', ['食べる']]]);
+  assert.deepEqual(words('*物'), [['pattern', ['食べ物']]]);
+  assert.deepEqual(words('物'), [['contains', ['食べ物']]]);
+});
+
+test('kanji details and examples', () => {
+  dict.setKanji('食\t[9,2,4,328,["ショク"],["た.べる"],["eat","food"]]');
+  dict.setExamples('0\t[["何を食べますか。","What will you eat?"]]');
+  assert.equal(dict.search('食').kanji.meanings[0], 'eat');
+  const d = dict.detail(0);
+  assert.deepEqual(d.kanji.map((k) => k.ch), ['食']);
+  assert.equal(d.examples[0][1], 'What will you eat?');
+});

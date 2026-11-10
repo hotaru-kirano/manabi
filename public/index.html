@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Manabi — fast Japanese lookup</title>
-  <meta name="description" content="Look up Japanese words instantly by typing or speaking. Works offline.">
+  <meta name="description" content="Look up Japanese words instantly by typing, drawing or speaking. Works offline.">
   <meta name="theme-color" content="#c8402d">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -23,6 +23,9 @@
       <button id="clear" type="button" class="icon-btn" aria-label="Clear" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
+      <button id="draw" type="button" class="icon-btn tool" aria-label="Draw a kanji" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1zM14.5 6.5l3 3"/></svg>
+      </button>
       <button id="mic" type="button" class="mic" aria-label="Speak a word" aria-pressed="false" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
       </button>
@@ -31,14 +34,31 @@
     <p id="status" class="status" role="status" aria-live="polite" hidden></p>
   </header>
 
-  <main id="results" class="results" aria-live="polite"></main>
+  <main id="results" class="results"></main>
 
   <footer class="foot">
-    Dictionary data: <a href="https://www.edrdg.org/jmdict/j_jmdict.html" target="_blank" rel="noopener">JMdict</a>
-    © <a href="https://www.edrdg.org/" target="_blank" rel="noopener">EDRDG</a>,
-    <a href="https://www.edrdg.org/edrdg/licence.html" target="_blank" rel="noopener">CC BY-SA 4.0</a>
+    Data: <a href="https://www.edrdg.org/jmdict/j_jmdict.html" target="_blank" rel="noopener">JMdict</a> and
+    <a href="https://www.edrdg.org/wiki/index.php/KANJIDIC_Project" target="_blank" rel="noopener">KANJIDIC</a>
+    © <a href="https://www.edrdg.org/edrdg/licence.html" target="_blank" rel="noopener">EDRDG</a> (CC BY-SA 4.0),
+    examples from <a href="https://tatoeba.org" target="_blank" rel="noopener">Tatoeba</a> (CC BY 2.0 FR),
+    strokes from <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener">KanjiVG</a> © Ulrich Apel (CC BY-SA 3.0)
     <span id="dict-version"></span>
   </footer>
+
+  <section id="pad" class="pad" aria-label="Draw a kanji" hidden>
+    <div id="cands" class="cands" aria-live="polite"></div>
+    <div class="pad-body">
+      <canvas id="canvas" aria-label="Drawing area"></canvas>
+      <div class="pad-btns">
+        <button id="pad-undo" type="button">Undo</button>
+        <button id="pad-clear" type="button">Clear</button>
+        <button id="pad-back" type="button" aria-label="Delete last character">⌫</button>
+        <button id="pad-close" type="button" class="primary">Done</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" role="status" hidden></div>
 
   <script type="module" src="js/app.js"></script>
 </body>
