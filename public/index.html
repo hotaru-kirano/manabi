@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Manabi — fast Japanese lookup</title>
+  <meta name="description" content="Look up Japanese words instantly by typing or speaking. Works offline.">
+  <meta name="theme-color" content="#c8402d">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Manabi">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="bar">
+    <form id="form" class="search" role="search" action="." autocomplete="off">
+      <input id="q" name="q" type="search" inputmode="search" enterkeyhint="search" lang="ja"
+             placeholder="日本語, romaji or English" aria-label="Search the dictionary"
+             autocapitalize="off" autocorrect="off" spellcheck="false" autofocus>
+      <button id="clear" type="button" class="icon-btn" aria-label="Clear" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <button id="mic" type="button" class="mic" aria-label="Speak a word" aria-pressed="false" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </button>
+    </form>
+    <div id="progress" class="progress" hidden><div></div></div>
+    <p id="status" class="status" role="status" aria-live="polite" hidden></p>
+  </header>
+
+  <main id="results" class="results" aria-live="polite"></main>
+
+  <footer class="foot">
+    Dictionary data: <a href="https://www.edrdg.org/jmdict/j_jmdict.html" target="_blank" rel="noopener">JMdict</a>
+    © <a href="https://www.edrdg.org/" target="_blank" rel="noopener">EDRDG</a>,
+    <a href="https://www.edrdg.org/edrdg/licence.html" target="_blank" rel="noopener">CC BY-SA 4.0</a>
+    <span id="dict-version"></span>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
