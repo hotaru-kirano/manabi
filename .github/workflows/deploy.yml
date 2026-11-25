@@ -2,7 +2,6 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
   schedule:
     - cron: '17 4 1 * *' # monthly, to pick up JMdict updates
   workflow_dispatch:
@@ -18,6 +17,7 @@ concurrency:
 
 jobs:
   deploy:
+    # Every push runs the tests; only the repository's default branch is published.
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -28,10 +28,14 @@ jobs:
         with:
           node-version: 22
       - run: npm test
-      - run: npm run build:dict
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - if: github.ref_name == github.event.repository.default_branch
+        run: npm run build:dict
+      - if: github.ref_name == github.event.repository.default_branch
+        uses: actions/configure-pages@v5
+      - if: github.ref_name == github.event.repository.default_branch
+        uses: actions/upload-pages-artifact@v3
         with:
           path: public
-      - id: deployment
+      - if: github.ref_name == github.event.repository.default_branch
+        id: deployment
         uses: actions/deploy-pages@v4

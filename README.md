@@ -53,8 +53,16 @@ support it; Firefox does not, so the mic button is hidden there. It requires HTT
 
 `public/` is a plain static site once `npm run build:dict` has run, so any static host works.
 
-`.github/workflows/deploy.yml` builds the dictionary and publishes to GitHub Pages on every push to `main`
-(and monthly, to pick up JMdict updates). Enable it once under **Settings → Pages → Source: GitHub Actions**.
+`.github/workflows/deploy.yml` builds the dictionary and publishes to GitHub Pages on every push to the
+repository's default branch (and monthly, to pick up JMdict updates). Enable it once under
+**Settings → Pages → Source: GitHub Actions**. GitHub Pages needs a public repository, or a paid GitHub
+plan for a private one.
+
+For a private repository on a free plan, Cloudflare Pages or Netlify work instead: connect the repository,
+set the build command to `npm run build:dict` and the output directory to `public`.
+
+The app must be served over HTTPS (all of the above do this): service workers and the microphone do not
+work on plain `http://` addresses other than localhost.
 
 ## How it works
 
